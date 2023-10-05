@@ -4,8 +4,8 @@
 int main()
 {
 
-    MyString a{};
-
-    
+    MyString a("zalupa");
+    a += " Jeskaya";
+    std::cout << a;
     return 0;
 }
