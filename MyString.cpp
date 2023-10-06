@@ -3,8 +3,6 @@
 
 //public functions
 
-// __Constructors__
-
 MyString::MyString()
 {
     this->value_ = 0;
@@ -70,8 +68,6 @@ MyString::~MyString()
 }
 
 
-// __Some funcs__
-
 const char * MyString::c_str() const
 {
     return this->value_;
@@ -110,8 +106,6 @@ void MyString::clear()
     this->SetTextLen(0);
 }
 
-
-// __Changing_memory_amount__
 
 void MyString::shrink_to_fit()
 {
@@ -158,7 +152,6 @@ void MyString::ExtendIfTiny(unsigned int concat_line_size)
         this->ExtendAndRealloc(this->capacity_ - 1 + concat_line_size);
 }
 
-// __Operators__
 
 MyString MyString::operator+(const MyString& input_value)
 {
@@ -345,7 +338,6 @@ bool operator==(MyString const& a, MyString const& b)
 }
 
 
-// __Insert__
 void MyString::insert(unsigned int index, unsigned int count, char symbol)
 {
     char * line_to_insert = new char(count + 1);
@@ -381,7 +373,6 @@ void MyString::insert(unsigned int index, std::string str, unsigned int count)
 }
 
 
-// __Erase__
 void MyString::erase(unsigned int index, unsigned int count)
 {
     unsigned int stop_index;
@@ -398,7 +389,7 @@ void MyString::erase(unsigned int index, unsigned int count)
     this->SetTextLen(this->size() - count);
 }
 
-// __Append__
+
 void MyString::append(unsigned int count, const char symbol)
 {
     std::cout << symbol << '\n';
@@ -453,7 +444,6 @@ void MyString::append(const MyString& input_value)
 }
 
 
-// __Replace__
 void MyString::replace(unsigned int index, unsigned int count, const char * line)
 {
     char * str_to_concat = NULL;
@@ -484,8 +474,6 @@ void MyString::replace(unsigned int index, unsigned int count, std::string str)
 }
 
 
-// __Substr__
-
 MyString MyString::substr(unsigned int pos, unsigned int count)
 {
     if(pos < this->size())
@@ -509,15 +497,81 @@ MyString MyString::substr(unsigned int pos, unsigned int count)
 }
 
 
+long long MyString::find(const std::string line_to_find, unsigned int index)
+{
+    return this->find(line_to_find.c_str());
+}
+
+long long MyString::find(const char* line_to_find, unsigned int index)
+{
+    unsigned int line_size = strlen(line_to_find);
+    
+    if(!line_to_find || line_size > this->size() || line_size <= 0) 
+        return -1;
+
+    size_t * suffix_table = new size_t(line_size);
+    size_t stop_table[UCHAR_MAX + 1];
+
+    for(size_t i = 0; i < UCHAR_MAX + 1; ++i)
+        stop_table[i] = -1;
+    
+    /* In stop_table writing last occuring in line_to_find  */
+    /* excluding last symbol */
+    for(size_t i = 0; i < line_size - 1; ++i) 
+        stop_table[line_to_find[i]] = i;
+    
+    /* Simple variant. Can be faster */
+    for(size_t i = 0; i < line_size; ++i)
+    {
+        size_t offset = line_size;
+        while(offset && !suffix_match(line_to_find, line_size, offset, i))
+            --offset;
+        suffix_table[line_size - i - 1] = line_size - offset;
+    }
+    
+    for(size_t this_pos = index; this_pos <= this->size() - line_size; )
+    {
+        size_t template_idx = line_size - 1;
+        /* comparing MyString with line_to_find */
+        while(line_to_find[template_idx] == this->value_[this_pos + template_idx])
+        {
+            if(template_idx == 0)
+            {
+                delete suffix_table;
+                return this_pos;
+            }
+            --template_idx;
+        }
+        /*  not similar  */
+        this_pos += max(suffix_table[template_idx], template_idx - stop_table[this->value_[template_idx + this_pos]]);
+        /*          ^^^         ^^^^                               */
+        /*         suffix     stop-symbol                          */
+    }
+    delete suffix_table;
+    return -1;
+}
+
+
 // private functions
 
-// __Allocators__
+int MyString::suffix_match(const char *line_to_find, size_t line_size, size_t offset, size_t suffixlen)
+{
+    if (offset > suffixlen)
+        return line_to_find[offset - suffixlen - 1] != line_to_find[line_size - suffixlen - 1] &&
+            memcmp(line_to_find + line_size - suffixlen, line_to_find + offset - suffixlen, suffixlen) == 0;
+    else
+        return memcmp(line_to_find + line_size - offset, line_to_find, offset) == 0;
+}
+
+size_t MyString::max(size_t a, size_t b)
+{
+    return a > b ? a : b; 
+}
 
 void MyString::AllocMemForValue()
 {
     this->value_ = new char(this->capacity_);
 }
-
 
 void MyString::AllocAndCopyValue(const char *line)
 {
@@ -533,8 +587,6 @@ void MyString::AllocAndCopyValue(const char *line, unsigned int line_size)
         strncpy(this->value_, line, line_size);
 }
 
-
-// __Setters__
 
 void MyString::SetZeroLenCapacityPointer()
 {
