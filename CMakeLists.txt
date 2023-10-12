@@ -43,7 +43,7 @@ target_include_directories(
 
 target_link_libraries(
     MyStringTests PRIVATE
-    gtest gtest_main MyStringLib
+    gtest gtest_main MyStringLib gmock
 )
 
 # for 3rd var
@@ -56,7 +56,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 target_include_directories(MyStringTests PRIVATE ${GTEST_INCLUDE_DIRS})
 
 # Link test target against gtest libraries
-target_link_libraries(MyStringTests PRIVATE ${GTEST_BOTH_LIBRARIES} MyStringLib)
+target_link_libraries(MyStringTests PRIVATE ${GTEST_BOTH_LIBRARIES} MyStringLib gmock)
 
 #-------------------------------------------------
 
