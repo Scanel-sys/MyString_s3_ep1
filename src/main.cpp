@@ -3,8 +3,8 @@
 
 int main()
 {
-    MyString a("zalupa");
-    std::cout << a.find("a", 2) << '\n';
+    MyString a("papacroach");
+    std::cin >> a;
 
     return 0;
 }

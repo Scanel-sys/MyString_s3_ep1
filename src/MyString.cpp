@@ -5,23 +5,21 @@
     TO DO:
         > refactor shitty suffix table maker
         > in find function casting (int) change to c++ casts 
-
 */
 
 //public functions
 
 MyString::MyString()
 {
-    this->value_ = 0;
     this->SetTextLen(0);
     this->SetCapacity(9);
-    this->AllocMemForValue();
+    this->StringAlloc();
 }
 
 MyString::MyString(std::initializer_list <char> list)
 {
-    this->SetTextLenWithCapacity(list.size());
-    this->AllocMemForValue();
+    this->SetSizeParameters(list.size());
+    this->StringAlloc();
     unsigned int i = 0;
     for(auto element : list)
     {
@@ -30,44 +28,30 @@ MyString::MyString(std::initializer_list <char> list)
     }
 }
 
-MyString::MyString(const char *line)
-{
-    if(line)
-    {
-        this->SetTextLenWithCapacity(strlen(line));
-        this->AllocAndCopyValue(line);
-    }
-}
+MyString::MyString(const char *line) : MyString::MyString(line, strlen(line)){}
 
 MyString::MyString(const char *line, unsigned int line_size)
 {
     if(line)
     {
-        this->SetTextLenWithCapacity(line_size);
-        this->AllocAndCopyValue(line, line_size);
+        this->SetSizeParameters(line_size);
+        this->StringAlloc();
+        this->CopyValue(line, line_size);
     }
 }
 
-MyString::MyString(std::string str)
-{
-    this->SetTextLenWithCapacity(str.size());
-    this->AllocAndCopyValue(str.c_str());
-}
+MyString::MyString(std::string str) : MyString::MyString(str.c_str(), str.size()){}
 
 MyString::MyString(unsigned int count, char c)
 {
-    this->SetTextLenWithCapacity(count);
-    this->AllocMemForValue();
-    for(unsigned int i = 0; i < this->text_len_; i++)
+    this->SetSizeParameters(count);
+    this->StringAlloc();
+    for(unsigned int i = 0; i < this->size(); i++)
         this->value_[i] = c;
-    this->value_[this->text_len_] = '\0';
+    this->value_[this->size()] = '\0';
 }
 
-MyString::MyString(const MyString &other)
-{
-    this->SetTextLenWithCapacity(other.text_len_);
-    this->AllocAndCopyValue(other.c_str());
-}
+MyString::MyString(const MyString &other) : MyString::MyString(other.c_str(), other.size()){}
 
 MyString::~MyString()
 {
@@ -97,7 +81,7 @@ unsigned int MyString::length() const
 
 bool MyString::empty() const
 {
-    if(this->text_len_ == 0)
+    if(this->size() == 0)
         return true;
     return false;
 }
@@ -116,47 +100,37 @@ void MyString::clear()
 
 void MyString::shrink_to_fit()
 {
-    if(this->text_len_ + 1 < this->capacity_)
+    if(this->size() + 1 < this->capacity())
     {
-        this->SetCapacity(this->text_len_ + 1);
-        this->Realloc(this->capacity_);
+        this->SetCapacity(this->size() + 1);
+        this->Realloc(this->capacity());
     }
 }
 
 void MyString::Realloc(unsigned int new_capacity)
 {
     char * temp = new char(new_capacity);
-    strncpy(temp, this->value_, this->text_len_);
+    strncpy(temp, this->value_, this->size());
     delete this->value_;
     this->value_ = temp; 
 }
 
-void MyString::ExtendAndRealloc()
+void MyString::ExtendString()
 {
-    this->ExtendCapacity2TimesThanNeed();
-    this->Realloc(this->capacity_);
+    this->SetDoubledCapacity();
+    this->Realloc(this->capacity());
 }
 
-void MyString::ExtendAndRealloc(unsigned int text_size)
+void MyString::ExtendString(unsigned int text_size)
 {
-    this->ExtendCapacity2TimesThanNeed(text_size);
-    this->Realloc(this->capacity_);
-}
-
-void MyString::ExtendCapacity2TimesThanNeed()
-{
-    this->capacity_ = (this->capacity_ - 1) * 2 + 1;
-}
-
-void MyString::ExtendCapacity2TimesThanNeed(unsigned int text_size)
-{
-    this->capacity_ = text_size * 2 + 1;
+    this->SetDoubledTextlenCapacity(text_size);
+    this->Realloc(this->capacity());
 }
 
 void MyString::ExtendIfTiny(unsigned int concat_line_size)
 {
-    if(this->capacity_ - this->text_len_ - 1 < concat_line_size)
-        this->ExtendAndRealloc(this->capacity_ - 1 + concat_line_size);
+    if(this->capacity() - this->size() - 1 < concat_line_size)
+        this->ExtendString(this->capacity() - 1 + concat_line_size);
 }
 
 
@@ -228,23 +202,18 @@ std::istream& operator>>(std::istream& in, MyString& s)
     in >> std::noskipws >> temp;
     while(!isspace(temp))
     {
-        if(i == s.capacity_)
-            s.ExtendAndRealloc();
+        if(i == s.capacity())
+            s.ExtendString();
         
         s.value_[i] = temp;
         in >> temp;
         i++;
     }
     s.SetTextLen(i);
-    s.value_[s.text_len_] = '\0';
+    s.value_[s.size()] = '\0';
     if(!if_skiws_set)
         in >> std::skipws;
     
-    std::cout << "\n";
-    for(unsigned int i = 0; i < s.size(); i++)
-        std::cout << s.value_[i];
-    std::cout << "from operatr >>\n\n";
-
     return in;
 }
 
@@ -391,7 +360,7 @@ void MyString::erase(unsigned int index, unsigned int count)
     if(index != stop_index)
     {
         this->value_[index] = '\0';
-        strcat(this->value_, &this->value_[stop_index]);
+        this->append(&this->value_[stop_index]);
     }
     this->SetTextLen(this->size() - count);
 }
@@ -403,7 +372,7 @@ void MyString::append(unsigned int count, const char symbol)
     this->ExtendIfTiny(count);
 
     for(unsigned int i = 0; i < count; i++)
-        this->value_[this->text_len_ + i] = symbol;
+        this->value_[this->size() + i] = symbol;
     this->SetTextLen(this->size() + count);
 }
 
@@ -412,8 +381,7 @@ void MyString::append(const char * line)
     int line_size = strlen(line);
     this->ExtendIfTiny(line_size);
 
-    for(int i = 0; i < line_size; i++)
-        this->value_[this->text_len_ + i] = line[i];
+    this->CopyValue(line, line_size, this->size());
     this->SetTextLen(this->size() + line_size);
 }
 
@@ -431,7 +399,7 @@ void MyString::append(const char * line, unsigned int index, unsigned int count)
     this->ExtendIfTiny(chars_to_copy);
 
     for(unsigned int i = 0; i < chars_to_copy; i++)
-        this->value_[this->text_len_ + i] = line[index + i];
+        this->value_[this->size() + i] = line[index + i];
     this->SetTextLen(this->size() + chars_to_copy);
 }
 
@@ -485,14 +453,9 @@ MyString MyString::substr(unsigned int pos, unsigned int count)
 {
     if(pos < this->size())
     {
-        if(count == 0)
-        {
-            MyString output(&this->value_[pos]);
-            return output;
-        }
-
         int chars_to_copy = count;
-        if(pos + count >= this->size())
+
+        if(count == 0 || pos + count >= this->size())
             chars_to_copy = this->size() - pos;
 
         MyString output(&this->value_[pos], chars_to_copy);
@@ -575,36 +538,33 @@ size_t MyString::max(size_t a, size_t b) const
     return a > b ? a : b; 
 }
 
-void MyString::AllocMemForValue()
+void MyString::StringAlloc()
 {
-    this->value_ = new char(this->capacity_);
+    this->value_ = new char(this->capacity());
 }
 
-void MyString::AllocAndCopyValue(const char *line)
+void MyString::CopyValue(const char *line)
 {
-    this->AllocMemForValue();
-    if(this->value_)
-        strncpy(this->value_, line, this->text_len_);
+    this->CopyValue(line, strlen(line));
 }
 
-void MyString::AllocAndCopyValue(const char *line, unsigned int line_size)
+void MyString::CopyValue(const char *line, unsigned int line_size, unsigned int index)
 {
-    this->AllocMemForValue();
-    if(this->value_)
-        strncpy(this->value_, line, line_size);
+    if(this->value_ && line)
+    {
+        for(unsigned int i = 0; i < line_size; i++)
+        {
+            this->value_[index + i] = line[i];
+            if(line[i] == '\0')
+                break;
+        }
+    }
 }
 
 
-void MyString::SetZeroLenCapacityPointer()
+void MyString::SetSizeParameters(unsigned int new_len)
 {
-    this->capacity_ = 0;
-    this->text_len_ = 0;
-    this->value_ = 0;
-}
-
-void MyString::SetTextLenWithCapacity(unsigned int new_len)
-{
-    this->SetExtendedCapacity(new_len);
+    this->SetDoubledTextlenCapacity(new_len);
     this->SetTextLen(new_len);
 }
 
@@ -618,7 +578,12 @@ void MyString::SetCapacity(unsigned int new_capacity)
     this->capacity_ = new_capacity;
 }
 
-void MyString::SetExtendedCapacity(unsigned int text_len)
+void MyString::SetDoubledCapacity()
+{
+    this->capacity_ = (this->capacity() - 1) * 2 + 1;
+}
+
+void MyString::SetDoubledTextlenCapacity(unsigned int text_len)
 {
     this->SetCapacity(text_len * 2 + 1);
 }

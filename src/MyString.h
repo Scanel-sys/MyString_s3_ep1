@@ -25,10 +25,8 @@ public:
 
     void shrink_to_fit();
     void Realloc(unsigned int new_capacity);
-    void ExtendAndRealloc();
-    void ExtendAndRealloc(unsigned int text_size);
-    void ExtendCapacity2TimesThanNeed();
-    void ExtendCapacity2TimesThanNeed(unsigned int text_size);
+    void ExtendString();
+    void ExtendString(unsigned int text_size);
 
     void ExtendIfTiny(unsigned int concat_line_size);
 
@@ -85,14 +83,14 @@ private:
     size_t max(size_t a, size_t b) const;
 
 
-    void AllocMemForValue();
-    void AllocAndCopyValue(const char *line);
-    void AllocAndCopyValue(const char *line, unsigned int line_size);
+    void StringAlloc();
+    void CopyValue(const char *line);
+    void CopyValue(const char *line, unsigned int line_size, unsigned int index = 0);
 
-    void SetZeroLenCapacityPointer();
-    void SetTextLenWithCapacity(unsigned int new_len);
+    void SetSizeParameters(unsigned int new_len);
     void SetTextLen(unsigned int new_len);
     void SetCapacity(unsigned int new_capacity);
-    void SetExtendedCapacity(unsigned int text_len);
+    void SetDoubledCapacity();
+    void SetDoubledTextlenCapacity(unsigned int text_len = 0);
     void SetZeroes();
 };
