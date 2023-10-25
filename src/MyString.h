@@ -35,9 +35,11 @@ public:
     MyString operator+(const std::string input_value);
     MyString& operator+=(const char* input_value);
     MyString& operator+=(const std::string input_value);
+    MyString& operator+=(const MyString& input_value);
     MyString& operator=(const char* input_value);
     MyString& operator=(const std::string input_value);
     MyString& operator=(const char input_value);
+    MyString& operator=(const MyString& input_value);
 
     friend std::ostream& operator<<(std::ostream& out, const MyString& s);
     friend std::istream& operator>>(std::istream& in, MyString& s);
@@ -49,23 +51,23 @@ public:
     friend bool operator!=(MyString const& a, MyString const& b);
     friend bool operator==(MyString const& a, MyString const& b);
 
-    void insert(unsigned int index, unsigned int count, char symbol);
-    void insert(unsigned int index, const char * line);
-    void insert(unsigned int index, const char * line, unsigned int count);
-    void insert(unsigned int index, std::string str);
-    void insert(unsigned int index, std::string str, unsigned int count);
+    MyString& insert(unsigned int index, unsigned int count, char symbol);
+    MyString& insert(unsigned int index, const char * line);
+    MyString& insert(unsigned int index, const char * line, unsigned int count);
+    MyString& insert(unsigned int index, std::string str);
+    MyString& insert(unsigned int index, std::string str, unsigned int count);
 
-    void erase(unsigned int index, unsigned int count);
+    MyString& erase(unsigned int index, unsigned int count);
 
-    void append(unsigned int count, const char symbol);
-    void append(const char * line);
-    void append(const char * line, unsigned int index, unsigned int count);
-    void append(const std::string& str);
-    void append(const std::string& str, unsigned int index, unsigned int count);
-    void append(const MyString& input_value);
+    MyString& append(unsigned int count, const char symbol);
+    MyString& append(const char * line);
+    MyString& append(const char * line, unsigned int index, unsigned int count);
+    MyString& append(const std::string& str);
+    MyString& append(const std::string& str, unsigned int index, unsigned int count);
+    MyString& append(const MyString& input_value);
 
-    void replace(unsigned int index, unsigned int count, const char * line);
-    void replace(unsigned int index, unsigned int count, std::string str);
+    MyString& replace(unsigned int index, unsigned int count, const char * line);
+    MyString& replace(unsigned int index, unsigned int count, std::string str);
 
     MyString substr(unsigned int pos, unsigned int count = 0);
 
