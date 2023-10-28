@@ -214,9 +214,11 @@ std::ostream& operator<<(std::ostream& out, const MyString& s)
 
 std::istream& operator>>(std::istream& in, MyString& s)
 {
-    char temp = ' ';
+    bool if_skiws_set = std::cin.flags() & std::ios_base::skipws;
+    char temp;
     unsigned int i = 0;
-    in >> temp;
+
+    in >> std::noskipws >> temp;
     while(!in.eof() && temp != '\n')
     {
         s.value_[i] = temp;
@@ -230,6 +232,9 @@ std::istream& operator>>(std::istream& in, MyString& s)
     }
     s.SetTextLen(i);
     s.value_[s.size()] = '\0';
+
+    if(!if_skiws_set)
+        in >> std::skipws;
 
     return in;
 }
