@@ -2,6 +2,9 @@
 #include <iostream>
 #include <initializer_list>
 
+#define BASIC_STRING_CAPACITY      9
+#define ENDLINE_SYMBOL          '\0'
+
 class MyString
 {
 public:
@@ -22,13 +25,14 @@ public:
     bool empty() const;
     unsigned int capacity() const;
     void clear();
+    void SetZeroes();
 
     void shrink_to_fit();
     void Realloc(unsigned int new_capacity);
     void ExtendString();
     void ExtendString(unsigned int text_size);
 
-    void ExtendIfTiny(unsigned int concat_line_size);
+    void ExtendIfNotEnoughCapacity(unsigned int line_to_add_size);
 
     MyString operator+(const MyString& input_value);
     MyString operator+(const char* input_value);
@@ -80,11 +84,6 @@ private:
     unsigned int capacity_;
     size_t stop_table[UCHAR_MAX + 1];
 
-
-    int suffix_match(const char *line_to_find, size_t line_size, size_t offset, size_t suffixlen) const;
-    size_t max(size_t a, size_t b) const;
-
-
     void StringAlloc();
     void CopyValue(const char *line);
     void CopyValue(const char *line, unsigned int line_size, unsigned int index = 0);
@@ -94,5 +93,7 @@ private:
     void SetCapacity(unsigned int new_capacity);
     void SetDoubledCapacity();
     void SetDoubledTextlenCapacity(unsigned int text_len = 0);
-    void SetZeroes();
 };
+
+size_t max(size_t a, size_t b);
+int suffix_match(const char *line_to_find, size_t line_size, size_t offset, size_t suffixlen);

@@ -10,12 +10,15 @@
             
 */
 
-//public functions
+
+// ==========================================================================
+// =============================== public ===================================
+// ========================================================================== 
 
 MyString::MyString()
 {
     this->SetTextLen(0);
-    this->SetCapacity(9);
+    this->SetCapacity(BASIC_STRING_CAPACITY);
     this->StringAlloc();
 }
 
@@ -51,7 +54,7 @@ MyString::MyString(unsigned int count, char c)
     this->StringAlloc();
     for(unsigned int i = 0; i < this->size(); i++)
         this->value_[i] = c;
-    this->value_[this->size()] = '\0';
+    this->value_[this->size()] = ENDLINE_SYMBOL;
 }
 
 MyString::MyString(const MyString &other) : MyString::MyString(other.c_str(), other.size()){}
@@ -84,9 +87,7 @@ unsigned int MyString::length() const
 
 bool MyString::empty() const
 {
-    if(this->size() == 0)
-        return true;
-    return false;
+    return this->size() == 0;
 }
 
 unsigned int MyString::capacity() const
@@ -96,10 +97,15 @@ unsigned int MyString::capacity() const
 
 void MyString::clear()
 {
-    this->value_[0] = '\0';
+    this->value_[0] = ENDLINE_SYMBOL;
     this->SetTextLen(0);
 }
 
+void MyString::SetZeroes()
+{
+    for(unsigned int i = 0; i < this->capacity_; i++)
+        this->value_[i] = ENDLINE_SYMBOL;
+}
 
 void MyString::shrink_to_fit()
 {
@@ -109,6 +115,7 @@ void MyString::shrink_to_fit()
         this->Realloc(this->capacity());
     }
 }
+
 
 void MyString::Realloc(unsigned int new_capacity)
 {
@@ -130,10 +137,10 @@ void MyString::ExtendString(unsigned int text_size)
     this->Realloc(this->capacity());
 }
 
-void MyString::ExtendIfTiny(unsigned int concat_line_size)
+void MyString::ExtendIfNotEnoughCapacity(unsigned int line_to_add_size)
 {
-    if(this->capacity() - this->size() - 1 < concat_line_size)
-        this->ExtendString(this->capacity() - 1 + concat_line_size);
+    if(this->capacity() - this->size() - 1 < line_to_add_size)
+        this->ExtendString(this->capacity() - 1 + line_to_add_size);
 }
 
 
@@ -205,8 +212,6 @@ MyString& MyString::operator=(const MyString& input_value)
     return *this;
 }
 
-
-
 std::ostream& operator<<(std::ostream& out, const MyString& s)
 {
     return out << s.c_str();
@@ -231,7 +236,7 @@ std::istream& operator>>(std::istream& in, MyString& s)
         }
     }
     s.SetTextLen(i);
-    s.value_[s.size()] = '\0';
+    s.value_[s.size()] = ENDLINE_SYMBOL;
 
     if(!if_skiws_set)
         in >> std::skipws;
@@ -283,42 +288,17 @@ bool operator<(MyString const& a, MyString const& b)
 
 bool operator>=(MyString const& a, MyString const& b)
 {
-    if(a.size() > b.size())
-        return true;
-    if(a.size() < b.size())
-        return false;
-    
-    for(unsigned int i = 0; i < a.size(); i++)
-        if(a.value_[i] < b.value_[i])
-            return false;
-    
-    return true;
+    return !(a < b);
 }
 
 bool operator<=(MyString const& a, MyString const& b)
 {
-    if(a.size() < b.size())
-        return true;
-    if(a.size() > b.size())
-        return false;
-    
-    for(unsigned int i = 0; i < a.size(); i++)
-        if(a.value_[i] > b.value_[i])
-            return false;
-    
-    return true;
+    return !(a > b);
 }
 
 bool operator!=(MyString const& a, MyString const& b)
 {
-    if(a.size() != b.size())
-        return true;
-    
-    for(unsigned int i = 0; i < a.size(); i++)
-        if(a.value_[i] != b.value_[i])
-            return true;
-
-    return false;
+    return !(a == b);
 }
 
 bool operator==(MyString const& a, MyString const& b)
@@ -341,7 +321,7 @@ MyString& MyString::insert(unsigned int index, unsigned int count, char symbol)
     char * line_to_insert = new char[count + 1];
     for(unsigned int i = 0; i < count; i++)
         line_to_insert[i] = symbol;
-    line_to_insert[count] = '\0';
+    line_to_insert[count] = ENDLINE_SYMBOL;
     this->replace(index, 0, line_to_insert);
     delete[] line_to_insert;
     return *this;
@@ -356,7 +336,7 @@ MyString& MyString::insert(unsigned int index, const char * line)
 MyString& MyString::insert(unsigned int index, const char * line, unsigned int count)
 {
     char * line_to_insert = new char[count + 1];
-    line_to_insert[0] = '\0';
+    line_to_insert[0] = ENDLINE_SYMBOL;
     strncat(line_to_insert, line, count);
     this->replace(index, 0, line_to_insert);
     delete[] line_to_insert;
@@ -375,7 +355,6 @@ MyString& MyString::insert(unsigned int index, std::string str, unsigned int cou
     return *this;
 }
 
-
 MyString& MyString::erase(unsigned int index, unsigned int count)
 {
     unsigned int stop_index;
@@ -386,17 +365,16 @@ MyString& MyString::erase(unsigned int index, unsigned int count)
 
     if(index < stop_index)
     {
-        this->value_[index] = '\0';
+        this->value_[index] = ENDLINE_SYMBOL;
         this->SetTextLen(index - 1);
         this->append(&this->value_[stop_index]);
     }
     return *this;
 }
 
-
 MyString& MyString::append(unsigned int count, const char symbol)
 {
-    this->ExtendIfTiny(count);
+    this->ExtendIfNotEnoughCapacity(count);
 
     for(unsigned int i = 0; i < count; i++)
         this->value_[this->size() + i] = symbol;
@@ -407,7 +385,7 @@ MyString& MyString::append(unsigned int count, const char symbol)
 MyString& MyString::append(const char * line)
 {
     int line_size = strlen(line);
-    this->ExtendIfTiny(line_size);
+    this->ExtendIfNotEnoughCapacity(line_size);
 
     this->CopyValue(line, line_size, this->size());
     this->SetTextLen(this->size() + line_size);
@@ -425,7 +403,7 @@ MyString& MyString::append(const char * line, unsigned int index, unsigned int c
         else
             chars_to_copy = line_size - index;
     }
-    this->ExtendIfTiny(chars_to_copy);
+    this->ExtendIfNotEnoughCapacity(chars_to_copy);
 
     for(unsigned int i = 0; i < chars_to_copy; i++)
         this->value_[this->size() + i] = line[index + i];
@@ -448,7 +426,6 @@ MyString& MyString::append(const MyString& input_value)
     return this->append(input_value.c_str());
 }
 
-
 MyString& MyString::replace(unsigned int index, unsigned int count, const char * line)
 {
     char * str_to_concat = NULL;
@@ -457,13 +434,13 @@ MyString& MyString::replace(unsigned int index, unsigned int count, const char *
     {
         unsigned int str_to_cat_size = this->size() - last_char_to_del;
         str_to_concat = new char[str_to_cat_size + 1];
-        str_to_concat[0] = '\0';
+        str_to_concat[0] = ENDLINE_SYMBOL;
         strncat(str_to_concat, &this->value_[last_char_to_del], str_to_cat_size);
     }
 
     unsigned int str_size = strlen(line);
-    this->ExtendIfTiny(str_size - count);
-    this->value_[index] = '\0';
+    this->ExtendIfNotEnoughCapacity(str_size - count);
+    this->value_[index] = ENDLINE_SYMBOL;
     strncat(this->value_, line, str_size);
     
     if(str_to_concat != NULL)
@@ -480,7 +457,6 @@ MyString& MyString::replace(unsigned int index, unsigned int count, std::string 
     this->replace(index, count, str.c_str());
     return *this;
 }
-
 
 MyString MyString::substr(unsigned int pos, unsigned int count)
 {
@@ -554,22 +530,9 @@ long long MyString::find(const char* line_to_find, unsigned int index)
 }
 
 
-// private functions
-
-// for suffix table creating
-int MyString::suffix_match(const char *line_to_find, size_t line_size, size_t offset, size_t suffixlen) const
-{
-    if (suffixlen < offset)
-        return line_to_find[line_size - suffixlen - 1] != line_to_find[offset - suffixlen - 1] &&
-            memcmp(line_to_find + line_size - suffixlen, line_to_find + offset - suffixlen, suffixlen) == 0;
-
-    return memcmp(line_to_find + line_size - offset, line_to_find, offset) == 0;
-}
-
-size_t MyString::max(size_t a, size_t b) const
-{
-    return a > b ? a : b; 
-}
+// ==========================================================================
+// =============================== private ==================================
+// ========================================================================== 
 
 void MyString::StringAlloc()
 {
@@ -588,14 +551,13 @@ void MyString::CopyValue(const char *line, unsigned int line_size, unsigned int 
         unsigned int i = 0;
         for(; i < line_size; i++)
         {
-            if(line[i] == '\0')
+            if(line[i] == ENDLINE_SYMBOL)
                 break;
             this->value_[index + i] = line[i];
         }
-        this->value_[index + i] = '\0';
+        this->value_[index + i] = ENDLINE_SYMBOL;
     }
 }
-
 
 void MyString::SetSizeParameters(unsigned int new_len)
 {
@@ -626,8 +588,17 @@ void MyString::SetDoubledTextlenCapacity(unsigned int text_len)
     this->SetCapacity(text_len * 2 + 1);
 }
 
-void MyString::SetZeroes()
+size_t max(size_t a, size_t b)
 {
-    for(unsigned int i = 0; i < this->capacity_; i++)
-        this->value_[i] = '\0';
+    return a > b ? a : b; 
+}
+
+// for suffix table creating
+int suffix_match(const char *line_to_find, size_t line_size, size_t offset, size_t suffixlen)
+{
+    if (suffixlen < offset)
+        return line_to_find[line_size - suffixlen - 1] != line_to_find[offset - suffixlen - 1] &&
+            memcmp(line_to_find + line_size - suffixlen, line_to_find + offset - suffixlen, suffixlen) == 0;
+
+    return memcmp(line_to_find + line_size - offset, line_to_find, offset) == 0;
 }
