@@ -28,11 +28,6 @@ public:
     void SetZeroes();
 
     void shrink_to_fit();
-    void Realloc(unsigned int new_capacity);
-    void ExtendString();
-    void ExtendString(unsigned int text_size);
-
-    void ExtendIfNotEnoughCapacity(unsigned int line_to_add_size);
 
     MyString operator+(const MyString& input_value);
     MyString operator+(const char* input_value);
@@ -85,6 +80,11 @@ private:
     size_t stop_table[UCHAR_MAX + 1];
 
     void StringAlloc();
+    void Realloc(unsigned int new_capacity);
+    void ExtendString();
+    void ExtendString(unsigned int text_size);
+    void ExtendIfNotEnoughCapacity(unsigned int line_to_add_size);
+    
     void CopyValue(const char *line);
     void CopyValue(const char *line, unsigned int line_size, unsigned int index = 0);
 

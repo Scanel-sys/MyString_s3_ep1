@@ -117,33 +117,6 @@ void MyString::shrink_to_fit()
 }
 
 
-void MyString::Realloc(unsigned int new_capacity)
-{
-    char * temp = new char[new_capacity];
-    strncpy(temp, this->value_, this->size());
-    delete[] this->value_;
-    this->value_ = temp; 
-}
-
-void MyString::ExtendString()
-{
-    this->SetDoubledCapacity();
-    this->Realloc(this->capacity());
-}
-
-void MyString::ExtendString(unsigned int text_size)
-{
-    this->SetDoubledTextlenCapacity(text_size);
-    this->Realloc(this->capacity());
-}
-
-void MyString::ExtendIfNotEnoughCapacity(unsigned int line_to_add_size)
-{
-    if(this->capacity() - this->size() - 1 < line_to_add_size)
-        this->ExtendString(this->capacity() - 1 + line_to_add_size);
-}
-
-
 MyString MyString::operator+(const MyString& input_value)
 {
     MyString output(*this);
@@ -538,6 +511,33 @@ void MyString::StringAlloc()
 {
     this->value_ = new char[this->capacity()];
 }
+
+void MyString::Realloc(unsigned int new_capacity)
+{
+    char * temp = new char[new_capacity];
+    strncpy(temp, this->value_, this->size());
+    delete[] this->value_;
+    this->value_ = temp; 
+}
+
+void MyString::ExtendString()
+{
+    this->SetDoubledCapacity();
+    this->Realloc(this->capacity());
+}
+
+void MyString::ExtendString(unsigned int text_size)
+{
+    this->SetDoubledTextlenCapacity(text_size);
+    this->Realloc(this->capacity());
+}
+
+void MyString::ExtendIfNotEnoughCapacity(unsigned int line_to_add_size)
+{
+    if(this->capacity() - this->size() - 1 < line_to_add_size)
+        this->ExtendString(this->capacity() - 1 + line_to_add_size);
+}
+
 
 void MyString::CopyValue(const char *line)
 {
